@@ -19,13 +19,19 @@ class Text(BaseModel):
 def get_settings():
     return Settings()
 
+
+
+def init_chatgpt(settings):      
+    chatgpt = ChatGPT(auth_type='openai', email=settings.EMAIL_OPENAI, 
+                    password=settings.PWD_OPENAI,
+                    login_cookies_path = '.cache_gpt',
+                    verbose=True)
+    return chatgpt
+
+
+
 settings = get_settings()
-chatgpt = ChatGPT(auth_type='openai', email=settings.EMAIL_OPENAI, 
-                password=settings.PWD_OPENAI,
-                login_cookies_path = '.cache_gpt',
-                verbose=True)
-
-
+chatgpt = init_chatgpt(settings)
 app = FastAPI()
 
 @app.get("/")
@@ -35,13 +41,18 @@ def read_root():
 @app.post("/query")
 async def predict(text: Text):
     """Function to generate predictions"""
+
+    global chatgpt
     try:
 
         response = chatgpt.send_message(text.text)
         out = response['message']
     except Exception as e:
         print(e)
-        out ='None'
+        out ='Please retry. ChatGPT is facing issues'
+        chatgpt.__del__()
+        chatgpt = init_chatgpt(settings)
+
     return {"answer": out}
 
 

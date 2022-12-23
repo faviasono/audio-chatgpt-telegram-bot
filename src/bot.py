@@ -1,36 +1,18 @@
 import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import whisper
-from pyChatGPT import ChatGPT
 from dotenv import load_dotenv
 import os
-import multiprocessing
-import time
-
-load_dotenv()
-API_TELEGRAM = os.getenv('API_TELEGRAM')
-SESSION_TOKEN = os.getenv('SESSION_TOKEN')
-email_openai = os.getenv('EMAIL_OPENAI')
-pwd_openai = os.getenv('PWD_OPENAI')
-
 import requests
+import json
+
+load_dotenv('app/.env')
+
+API_TELEGRAM = os.getenv('API_TELEGRAM')
 
 headers = {'accept': 'application/json','Content-Type': 'application/json'}
-payload = {'text': "What's the meaning of my life?"}
-
-
-print("Sending request")
-
-r = requests.post('http://127.0.0.1:8500/query', json=payload, headers=headers)
-
-print(r)
-exit(1)
 
 whisper_model = whisper.load_model("base")
-chatgpt = ChatGPT(auth_type='openai', email=email_openai, 
-                password=pwd_openai,
-                login_cookies_path = '.cache_gpt',
-                verbose=True)
 
 # reset the conversation
 
@@ -78,38 +60,22 @@ def handle_voice_message(update, context):
             print("error: " + e.message)
 
 
-
-
-
 def generate_response(transcribed_text):
     """ Generate answer using ChatGPT """
+    resp = requests.post('http://127.0.0.1:8501/query', json={'text':transcribed_text}, headers=headers)
+    return resp.json()['answer']
 
-    #response = {}
-    #p = multiprocessing.Process(target=send_answer_chatgpt, name="send_message", args=(chatgpt, transcribed_text, response))
-    #p.start()
-
-    #p.join(40)
-    #if p.is_alive():
-    #    p.terminate()
-    #    p.join()
-    resp = chatgpt.send_message(transcribed_text)
-
-    print(resp)
-    return resp['message']
-
-def reset(update, context):
-    """ Reset conversation """
-    chatgpt.reset_conversation()
 
 def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
+def reset(update, context):
+    """Log Errors caused by Updates."""
+    resp = requests.post('http://127.0.0.1:8501/reset')
 
 def main():
     """Start the bot."""
-    # Create the Updater and pass it your bot's token.
-    # Make sure to set use_context=True to use the new context based callbacks
-    # Post version 12 this will no longer be necessary
+
     updater = Updater(API_TELEGRAM, use_context=True)
 
     # Get the dispatcher to register handlers
