@@ -14,11 +14,9 @@ class Text(BaseModel):
     text: str
 
 
-
 @lru_cache()
 def get_settings():
     return Settings()
-
 
 
 def init_chatgpt(settings):      
@@ -27,7 +25,6 @@ def init_chatgpt(settings):
                     login_cookies_path = '.cache_gpt',
                     verbose=True)
     return chatgpt
-
 
 
 settings = get_settings()
