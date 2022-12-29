@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+voice.mp3
+cf_failed_0.png
