@@ -3,17 +3,19 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import whisper
 from dotenv import load_dotenv
 import os
+import argparse
 import requests
 
 load_dotenv("app/.env")
-
 API_TELEGRAM = os.getenv("API_TELEGRAM")
-
 headers = {"accept": "application/json", "Content-Type": "application/json"}
-
 whisper_model = whisper.load_model("base")
 
-# reset the conversation
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-hs", "--host", help="specify a hostname", default='127.0.0.1', type=str)
+parser.add_argument("-p", "--port", help="specify a port number", default=5052, type=int)
+args = parser.parse_args()
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -64,19 +66,26 @@ def handle_voice_message(update, context):
         print("error: " + e.message)
 
 
-def generate_response(transcribed_text):
+def generate_response(transcribed_text: str, retries: int = 3, timeout: int = 40):
     """Generate answer using ChatGPT"""
-
-    try:
-        resp = requests.post(
-            "http://127.0.0.1:8501/query",
-            json={"text": transcribed_text},
-            headers=headers,
-            timeout=60,
-        )
-        return resp.json()["answer"]
-    except Exception as e:
-        return "ChatGPT Error"
+    for i in range(retries):
+        try:
+            # Make the POST request
+            response = requests.post(
+                f"http://{args.host}:{args.port}/query",
+                json={"text": transcribed_text},
+                headers=headers,
+                timeout=timeout,
+            )
+            # If the request is successful, return the response
+            if response.status_code == 200:
+                return response.json()["answer"]
+        except requests.exceptions.RequestException:
+            # If there was a timeout or other error, try again
+            print("I keep asking")
+            continue
+    # If all retries fail, raise an exception
+    raise Exception("POST request failed after {} retries".format(retries))
 
 
 def error(update, context):
@@ -86,7 +95,7 @@ def error(update, context):
 
 def reset(update, context):
     """Log Errors caused by Updates."""
-    resp = requests.post("http://127.0.0.1:8501/reset")
+    resp = requests.post(f"http://{args.host}:{args.port}/reset")
 
 
 def main():
@@ -118,4 +127,10 @@ def main():
 
 
 if __name__ == "__main__":
+
+
+
+
+    print(args)
+
     main()
