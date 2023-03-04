@@ -2,7 +2,7 @@ import logging
 import logging.config
 import os
 import time
-
+import subprocess
 import telegram
 from dotenv import load_dotenv
 
@@ -19,11 +19,9 @@ import sys
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import whisper
 
 from database.database import *
 
-whisper_model = whisper.load_model("base")
 
 CHATGPT_MODEL = os.environ.get("CHATGPT_MODEL")
 
@@ -51,20 +49,23 @@ def transcribe_voice_message(voice_message: str) -> str:
     """
     Transcribe voice message using Wishper model
 
-    TODO: Use official APIs
     """
     # Use the Whisper AI API to transcribe the voice message
-    result = whisper_model.transcribe(voice_message)
+    audio_file= open(voice_message, "rb")
+    result = openai.Audio.transcribe("whisper-1", audio_file)
+
     return result["text"]
 
 
 def handle_voice_message(update, context):
     # Get the voice message from the update
     voice_message = context.bot.get_file(update.message.voice.file_id)
-    voice_message.download(f"/tmp/voice.mp3")
+    print(voice_message)
+    voice_message.download("/tmp/audio.oga")
+    subprocess.run(["ffmpeg", "-i", '/tmp/audio.oga', '/tmp/audio.mp3'])
 
     # Transcribe the voice message
-    text = transcribe_voice_message("/tmp/voice.mp3")
+    text = transcribe_voice_message("/tmp/audio.mp3")
 
     # Answer
     telegram_id = update.message.chat.id
