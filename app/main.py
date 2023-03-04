@@ -62,7 +62,7 @@ def handle_voice_message(update, context):
     voice_message = context.bot.get_file(update.message.voice.file_id)
     print(voice_message)
     voice_message.download("/tmp/audio.oga")
-    subprocess.run(["ffmpeg", "-i", '/tmp/audio.oga', '/tmp/audio.mp3'])
+    subprocess.run(["ffmpeg", "-y", "-i", '/tmp/audio.oga', '/tmp/audio.mp3'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Transcribe the voice message
     text = transcribe_voice_message("/tmp/audio.mp3")
