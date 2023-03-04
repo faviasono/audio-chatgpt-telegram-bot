@@ -1,9 +1,21 @@
 # Spacefile Docs: https://go.deta.dev/docs/spacefile/v0
 v: 0
 micros:
-  - name: audio-chatgpt-telegram-bot
+  - name: name-bot
     src: .
-    engine: python3.9
+    engine: python3.8
     primary: true
-    run: python app/main.py
-    
+    presets:
+        env:
+          - name: API_TELEGRAM
+            description: Telegram Bot Key
+            default: "enter your key"
+          - name: OPEN_AI
+            description: Open AI Key
+            default: "enter your key"
+          - name: MODE
+            description: Mode for telegram bot
+            default: "webhook"
+            
+
+
