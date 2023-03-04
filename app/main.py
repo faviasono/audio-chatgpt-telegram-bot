@@ -127,7 +127,6 @@ def main():
 
     # Start the Bot
     if DefaultConfig.MODE == "webhook":
-        print(DefaultConfig)
         updater.start_webhook(
             listen="0.0.0.0",
             port=int(DefaultConfig.PORT),
@@ -145,7 +144,7 @@ def main():
 
 
 class DefaultConfig:
-    PORT = int(os.environ.get("WEBHOOK_PORT", 443))
+    PORT = int(os.environ.get("WEBHOOK_PORT", 5000))
     TELEGRAM_TOKEN = os.environ.get("API_TELEGRAM", "")
     MODE = os.environ.get("MODE", "webhook")
     WEBHOOK_URL = os.environ.get("WEBHOOK_URL", "")
@@ -158,13 +157,12 @@ class DefaultConfig:
             format="%(asctime)s - %(levelname)s - %(message)s",
             level=DefaultConfig.LOG_LEVEL,
         )
-        # logging.config.fileConfig('logging.conf')
+        logging.config.fileConfig('logging.conf')
 
 
 if __name__ == "__main__":
     # Enable logging
-    config = DefaultConfig.init_logging()
+    DefaultConfig.init_logging()
 
-    print(config)
 
     main()
