@@ -157,7 +157,7 @@ class DefaultConfig:
             format="%(asctime)s - %(levelname)s - %(message)s",
             level=DefaultConfig.LOG_LEVEL,
         )
-        logging.config.fileConfig('logging.conf')
+        
 
 
 if __name__ == "__main__":
