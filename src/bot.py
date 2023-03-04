@@ -4,9 +4,19 @@ import whisper
 from dotenv import load_dotenv
 from typing import List
 import os
+import sys
 import argparse
-import requests
 import openai
+import sqlite3
+
+DATABASE_FILE = "chatbot_db.sqlite"
+
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database import *
+
+import json
+
 
 load_dotenv("app/.env")
 
@@ -15,14 +25,14 @@ CHATGPT_SYSTEM_ROLE = (
     "You are a Telegram bot, and need to give concise and short answers"
 )
 
-CHATGPT_SYSTEM_MESSAGE =  {"role": "system", "content": CHATGPT_SYSTEM_ROLE}
-messages = [CHATGPT_SYSTEM_MESSAGE]# GLOBAL VARIABLE
+CHATGPT_SYSTEM_MESSAGE = {"role": "system", "content": CHATGPT_SYSTEM_ROLE}
+messages = [CHATGPT_SYSTEM_MESSAGE]  # GLOBAL VARIABLE
 
 API_TELEGRAM = os.getenv("API_TELEGRAM")
 API_OPENAI = os.getenv("OPENAI_TOKEN")
 openai.api_key = API_OPENAI
 
-headers = {"accept": "application/json", "Content-Type": "application/json"}
+
 whisper_model = whisper.load_model("base")
 
 
@@ -44,9 +54,10 @@ logger = logging.getLogger(__name__)
 
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
-def start(update, context):
+def start(update: Updater, context):
     """Send a message when the command /start is issued."""
-    update.message.reply_text("Hi!")
+
+    update.message.reply_text("Hi! Please insert your OpenAPI key")
 
 
 def help(update, context):
@@ -56,13 +67,20 @@ def help(update, context):
 
 def echo(update, context):
     """Echo the user message."""
-    answer = generate_response(update.message.text)
+
+    print(update)
+
+    telegram_id = update.message.chat.id
+    print(telegram_id)
+
+    answer = generate_response(update.message.text, telegram_id)
     update.message.reply_text(answer)
 
 
 def transcribe_voice_message(voice_message):
     # Use the Whisper AI API to transcribe the voice message
     result = whisper_model.transcribe(voice_message)
+
     return result["text"]
 
 
@@ -73,71 +91,89 @@ def handle_voice_message(update, context):
 
     # Transcribe the voice message
     text = transcribe_voice_message("/tmp/voice.mp3")
+    print(text)
     try:
         # Answer
-        answer = generate_response(text = text)
+        telegram_id = update.message.chat.id
+
+        answer = generate_response(text, telegram_id)
 
         # Send the transcribed text back to the user
         update.message.reply_text(answer)
 
     except Exception as e:
-        print("error: " + e.message)
+        print(e)
 
 
-# def generate_response(transcribed_text: str, retries: int = 3, timeout: int = 40):
-#     """Generate answer using ChatGPT"""
-#     for i in range(retries):
-#         try:
-#             # Make the POST request
-#             response = requests.post(
-#                 f"http://{args.host}:{args.port}/query",
-#                 json={"text": transcribed_text},
-#                 headers=headers,
-#                 timeout=timeout,
-#             )
-#             # If the request is successful, return the response
-#             if response.status_code == 200:
-#                 return response.json()["answer"]
-#         except requests.exceptions.RequestException:
-#             # If there was a timeout or other error, try again
-#             print("I keep asking")
-#             continue
-#     # If all retries fail, raise an exception
-#     raise Exception("POST request failed after {} retries".format(retries))
-
-
-
-
-def generate_response(transcribed_text: str):
+def generate_response(transcribed_text: str, telegram_id: str):
     """Generate answer using ChatGPT"""
 
     try:
-        messages.append({"role": "user", "content": transcribed_text})
-        print(messages)
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", messages=messages
+        # Retrieve user-specific data from the database
+        with sqlite3.connect(DATABASE_FILE) as conn:
+            c = conn.cursor()
+            c.execute(
+                "SELECT api_key, history FROM users WHERE telegram_id = ?",
+                (telegram_id,),
+            )
+            row = c.fetchone()
+            if row is None:
+                raise ValueError(f"No user found with telegram_id '{telegram_id}'")
+            api_key, history_json = row
+            history = json.loads(history_json) if history_json else []
+            c.close()
+
+        # Set the OpenAI API key
+        openai.api_key = api_key
+
+        # Add the user's message to the chat history
+        history.append({"role": "user", "content": transcribed_text})
+        print(history)
+
+        # Generate a response using ChatGPT
+        response = openai.Completion.create(
+            engine=CHATGPT_MODEL,
+            messages=history,
         )
 
-        answer = response["choices"][0]["message"]["content"]
-        messages.append({"role": "assistant", "content": answer})
+        # Extract the response and add it to the chat history
+        answer = response["choices"][0]["text"]
+        history.append({"role": "assistant", "content": answer})
+
+        # Update the user's chat history in the database
+        with sqlite3.connect(DATABASE_FILE) as conn:
+            c = conn.cursor()
+            c.execute(
+                "UPDATE users SET history = ? WHERE telegram_id = ?",
+                (json.dumps(history), telegram_id),
+            )
+            conn.commit()
+            c.close()
+
         return answer
 
-
-    except:
+    except Exception as e:
+        print(e)
         # If all retries fail, raise an exception
         raise Exception("POST request failed after")
 
+
 def reset(update, context):
-    global messages
-    messages = [CHATGPT_SYSTEM_MESSAGE]
-    update.message.reply_text(' History cleaned up successfully')
+    with sqlite3.connect(DATABASE_FILE) as conn:
+        c = conn.cursor()
+        c.execute(
+            "UPDATE users SET history = ? WHERE telegram_id = ?",
+            (json.dumps([]), update.message.chat.id),
+        )
+        conn.commit()
+        c.close()
+
+    update.message.reply_text("History cleaned up successfully")
+
 
 def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
-
-
-
 
 
 def main():
@@ -150,6 +186,7 @@ def main():
 
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
+
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("reset", reset))
 

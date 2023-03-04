@@ -133,3 +133,4 @@ cf_failed_0.png
 .gitignore
 
 demo_chatgpt.py
+gptbot_db.sqlite
