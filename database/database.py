@@ -1,13 +1,20 @@
-import sqlite3
 import json
 from typing import List, Dict, Union
 from dotenv import load_dotenv
 import os
+import mysql.connector
+
+
+###############
 load_dotenv("app/.env")
 
-DATABASE_FILE = os.environ.get("MYSQL_URL", 'gptbot_db.sqlite')
+db_host = os.environ.get("MYSQLHOST")
+db_user = os.environ.get("MYSQLUSER")
+db_password = os.environ.get("MYSQLPASSWORD")
+db_name = os.environ.get("MYSQLDATABASE")
 
-print(DATABASE_FILE)
+
+###################
 
 
 SYSTEM_RULE = {
@@ -16,11 +23,11 @@ SYSTEM_RULE = {
 }
 
 
-
-
 def create_db():
     # Create a connection to the database
-    with sqlite3.connect(DATABASE_FILE) as conn:
+    with mysql.connector.connect(
+        host=db_host, user=db_user, password=db_password, database=db_name
+    ) as conn:
         c = conn.cursor()
         c.execute(
             """
@@ -36,7 +43,9 @@ def create_db():
 def add_new_user(user: str):
     new_user = {"telegram_id": user, "history": json.dumps([SYSTEM_RULE])}
 
-    with sqlite3.connect(DATABASE_FILE) as conn:
+    with mysql.connector.connect(
+        host=db_host, user=db_user, password=db_password, database=db_name
+    ) as conn:
         c = conn.cursor()
         c.execute(
             "INSERT OR IGNORE INTO users (telegram_id, history) VALUES (?, ?)",
@@ -46,7 +55,9 @@ def add_new_user(user: str):
 
 
 def retrieve_history(user: str) -> Dict:
-    with sqlite3.connect(DATABASE_FILE) as conn:
+    with mysql.connector.connect(
+        host=db_host, user=db_user, password=db_password, database=db_name
+    ) as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE telegram_id = ?", (user,))
         row = c.fetchone()
@@ -55,7 +66,9 @@ def retrieve_history(user: str) -> Dict:
 
 
 def reset_history_user(user: str):
-    with sqlite3.connect(DATABASE_FILE) as conn:
+    with mysql.connector.connect(
+        host=db_host, user=db_user, password=db_password, database=db_name
+    ) as conn:
         c = conn.cursor()
         c.execute(
             "UPDATE users SET history = ? WHERE telegram_id = ?",
@@ -71,7 +84,9 @@ def create_question_prompt(row: Dict, question: str) -> Dict:
 
 
 def update_history_user(user: str, question: str, answer: str):
-    with sqlite3.connect(DATABASE_FILE) as conn:
+    with mysql.connector.connect(
+        host=db_host, user=db_user, password=db_password, database=db_name
+    ) as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE telegram_id = ?", (user,))
         row = c.fetchone()
