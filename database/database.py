@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv("app/.env")
 
-DATABASE_FILE = os.environ.get("DATABASE_URI", 'gptbot_db.sqlite')
+DATABASE_FILE = os.environ.get("MYSQL_URL", 'gptbot_db.sqlite')
 
 print(DATABASE_FILE)
 
@@ -14,6 +14,8 @@ SYSTEM_RULE = {
     "role": "system",
     "content": "you are a friendly bot that gives short answers",
 }
+
+
 
 
 def create_db():
