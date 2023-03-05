@@ -1,8 +1,14 @@
 import sqlite3
 import json
 from typing import List, Dict, Union
+from dotenv import load_dotenv
+import os
+load_dotenv("app/.env")
 
-DATABASE_FILE = "gptbot_db.sqlite"
+DATABASE_FILE = os.environ.get("DATABASE_URI", 'gptbot_db.sqlite')
+
+print(DATABASE_FILE)
+
 
 SYSTEM_RULE = {
     "role": "system",
@@ -81,6 +87,7 @@ def update_history_user(user: str, question: str, answer: str):
 
 
 if __name__ == "__main__":
+
     user = "323232"
     add_new_user(user)
 
