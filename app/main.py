@@ -33,13 +33,13 @@ def help_command_handler(update, context):
 
 def start_command_handler(update, context):
     """Send a message when the command /start is issued."""
-    add_new_user(update.message.chat.id)
+    add_new_user(str(update.message.chat.id))
     update.message.reply_text("You are ready to go 🚀")
 
 
 def echo(update, context):
     """Echo the user message."""
-    telegram_id = update.message.chat.id
+    telegram_id = str(update.message.chat.id)
     message = update.message.text
     answer = generate_response(message, telegram_id)
     update.message.reply_text(answer)
@@ -68,7 +68,7 @@ def handle_voice_message(update, context):
     text = transcribe_voice_message("/tmp/audio.mp3")
 
     # Answer
-    telegram_id = update.message.chat.id
+    telegram_id = str(update.message.chat.id)
     answer = generate_response(text, telegram_id)
     # Send the transcribed text back to the user
     update.message.reply_text(answer)
@@ -104,7 +104,7 @@ def error(update, context):
 
 
 def reset(update, context):
-    telegram_id = update.message.chat.id
+    telegram_id = str(update.message.chat.id)
     reset_history_user(telegram_id)
 
 
