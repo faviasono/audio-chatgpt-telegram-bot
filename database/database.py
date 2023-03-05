@@ -1,12 +1,10 @@
 import json
-from typing import List, Dict, Union
-from dotenv import load_dotenv
 import os
+from typing import Dict
+
 import psycopg2
+from dotenv import load_dotenv
 
-
-
-###############
 load_dotenv("app/.env")
 
 db_host = os.environ.get("PGHOST")
@@ -15,12 +13,11 @@ db_password = os.environ.get("PGPASSWORD")
 db_name = os.environ.get("PGDATABASE")
 
 
-###################
 
 
 SYSTEM_RULE = {
     "role": "system",
-    "content": "you are unfriendly Karen and gives answers up to 50 words.",
+    "content": "you are friendly bot and gives answers up to 50 words.",
 }
 
 
@@ -36,7 +33,7 @@ def create_db():
                 telegram_id TEXT PRIMARY KEY,
                 history TEXT
             );
-        """
+             """
         )
         conn.commit()
 
