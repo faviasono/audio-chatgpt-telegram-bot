@@ -148,7 +148,7 @@ class DefaultConfig:
     TELEGRAM_TOKEN = os.environ.get("API_TELEGRAM", "")
     MODE = os.environ.get("MODE", "webhook")
     #WEBHOOK_URL = os.environ.get("WEBHOOK_URL", "")
-    WEBHOOK_URL = os.environ.get("DETA_SPACE_APP_HOSTNAME", "")
+    WEBHOOK_URL = 'https://web-production-0c6f4.up.railway.app/'
 
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
