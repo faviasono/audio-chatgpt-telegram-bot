@@ -27,14 +27,16 @@ def start_command_handler(update, context):
     """Send a message when the command /start is issued."""
     add_new_user(str(update.message.chat.id))
 
-    start_text = """Hi there, this bot allows you to query ChatGPT directly from Telegram, even with voice messages! 🤯\n
-    It keeps track of your past messages, remember to write /reset if you want to cancel the history.
+    start_text = """
+    Hi there, this bot allows you to query ChatGPT directly from Telegram, even with voice messages! 🤯
+    It keeps track of your past messages, remember to select /reset from the command menu to cancel the history.
     
     Code: https://github.com/faviasono/audio-chatgpt-telegram-bot
     Credits: @faviasono ✌🏻
                     
                     
-    You are ready to go 🚀"""
+    You are ready to go 🚀
+    """
     
     update.message.reply_text(start_text)
 
