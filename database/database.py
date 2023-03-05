@@ -2,16 +2,17 @@ import json
 from typing import List, Dict, Union
 from dotenv import load_dotenv
 import os
-import mysql.connector
+import psycopg2
+
 
 
 ###############
 load_dotenv("app/.env")
 
-db_host = os.environ.get("MYSQLHOST")
-db_user = os.environ.get("MYSQLUSER")
-db_password = os.environ.get("MYSQLPASSWORD")
-db_name = os.environ.get("MYSQLDATABASE")
+db_host = os.environ.get("PGHOST")
+db_user = os.environ.get("PGUSER")
+db_password = os.environ.get("PGPASSWORD")
+db_name = os.environ.get("PGDATABASE")
 
 
 ###################
@@ -25,7 +26,7 @@ SYSTEM_RULE = {
 
 def create_db():
     # Create a connection to the database
-    with mysql.connector.connect(
+    with psycopg2.connect(
         host=db_host, user=db_user, password=db_password, database=db_name
     ) as conn:
         c = conn.cursor()
@@ -43,35 +44,35 @@ def create_db():
 def add_new_user(user: str):
     new_user = {"telegram_id": user, "history": json.dumps([SYSTEM_RULE])}
 
-    with mysql.connector.connect(
+    with psycopg2.connect(
         host=db_host, user=db_user, password=db_password, database=db_name
     ) as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT OR IGNORE INTO users (telegram_id, history) VALUES (?, ?)",
+            "INSERT INTO users (telegram_id, history) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
             (new_user["telegram_id"], new_user["history"]),
         )
         conn.commit()
 
 
 def retrieve_history(user: str) -> Dict:
-    with mysql.connector.connect(
+    with psycopg2.connect(
         host=db_host, user=db_user, password=db_password, database=db_name
     ) as conn:
         c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE telegram_id = ?", (user,))
+        c.execute("SELECT * FROM users WHERE telegram_id = %s", (user,))
         row = c.fetchone()
 
     return row
 
 
 def reset_history_user(user: str):
-    with mysql.connector.connect(
+    with psycopg2.connect(
         host=db_host, user=db_user, password=db_password, database=db_name
     ) as conn:
         c = conn.cursor()
         c.execute(
-            "UPDATE users SET history = ? WHERE telegram_id = ?",
+            "UPDATE users SET history = %sWHERE telegram_id = %s",
             (json.dumps([SYSTEM_RULE]), user),
         )
 
@@ -84,11 +85,11 @@ def create_question_prompt(row: Dict, question: str) -> Dict:
 
 
 def update_history_user(user: str, question: str, answer: str):
-    with mysql.connector.connect(
+    with psycopg2.connect(
         host=db_host, user=db_user, password=db_password, database=db_name
     ) as conn:
         c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE telegram_id = ?", (user,))
+        c.execute("SELECT * FROM users WHERE telegram_id = %s", (user,))
         row = c.fetchone()
         if row:
             user = {"telegram_id": row[0], "history": json.loads(row[1])}
@@ -98,7 +99,7 @@ def update_history_user(user: str, question: str, answer: str):
             user["history"].append(answer_rule)
             updated_history = json.dumps(user["history"])
             c.execute(
-                "UPDATE users SET history = ? WHERE telegram_id = ?",
+                "UPDATE users SET history = %sWHERE telegram_id = %s",
                 (updated_history, user["telegram_id"]),
             )
 
