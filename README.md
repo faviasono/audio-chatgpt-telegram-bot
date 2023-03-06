@@ -3,53 +3,50 @@
 **ChatGPT** is changing how we perceive technology, and interacting with it in a smooth and clean manner is paramount to further improve user experience. This is why I believe interacting with it using Telegram bots and using speech can help further exploit its potential.
 
 Telegram bot to use ChatGPT with text and vocal messages.
-Currently, there is no APIs available for using ChatGPT, hence I relied on external projects that use Selenium to interact with ChatGPT.
+I have updated the repo using Whisper and ChatGPT official APIs from OpenAI. 
 
-Once the APIs will be available, the bot will be officialy released on a production server.
-At the moment, it's usage is limited to one thread and one process and is deployed on my local machine.
+The bot has been deployed on [Railway](https://railway.app), and it works amazingly! 🚀
+You can deploy your own bot, or try out mine! [@AudioGPT_bot](https://t.me/AudioGPT_bot)
 
-Any recommendations or suggestions is welcome in the issue tracker.
+## Features
 
-## Implementation
-
-I used [pyChatGPT](https://github.com/terry3041/pyChatGPT) and deployed it as API using `FastAPI` framework.
-Then, I use `python-telegram-bot` to send post requests to the API and return the text back to the user.
-Voice messages are first transcribed using opened-source OpenAI `Wishper` model and then sent to ChatGPT API.
-
-
-## Usage
-
-1. Telegram BOT
-
-When the bot is running on my local host, you can text to the audio-chatgpt bot on Telegram.
-
-2. Repository
-
-You first need to run the fast api service using 
-
-    uvicorn app.main:app --port PORT_NAME
-
-Then, you can run  
-
-    python src/bot.pt -hs HOST_NAME  -p PORT_NAME
-
-### Caveats 
-1. At the moment, everything is set up to work on localhost.
-2. You need `.env` file to add `TELEGRAM_API`, `EMAIL_OPENAI`, `PWD_OPENAI` variables to login.
+* Use voice and text messages to interact with the Bot
+* Type or speak in many different languages 
+* Fast answers (2-3 seconds)
+* History tracked for individual user (you can clean it)
 
 
+## Bot commands
 
-You might need to create your own Telegram Bot using `BotFather` service to create your own audio-chatgpt bot.
+* `/reset` – start new dialog
+* `/help` – show help
+* `/start` – register to the service
 
 
-## Examples
-I sent to Telegram bot the voice message 
+## Setup for deployment
 
-    Please list three activities I can do on a rainy day
+1. Register the new bot with @BotFather and retrieve the bot key
+2. Register to OpenAI and retrieve the key
+3. Register to Railway and use the template I created to set up your own configuration:
 
-Below you can see the output on Telegram:
+    [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/ENSB8w?referralCode=c9RZUJ)
 
-![](static/example.png)
+If you want to run locally, you will still need to set up a PostgreSQL database and configure the following env variable in `app/.env` file:
+```YAML
+    API_TELEGRAM = ""
+    OPENAI_TOKEN = ""
+
+    MODE = 'polling'
+    PORT = '8443'
+    CHATGPT_MODEL = "gpt-3.5-turbo"
+
+    PGDATABASE = ""
+    PGHOST = ""
+    PGPASSWORD = ""
+    PGPORT = ""
+    PGUSER = ""
+
+```
 
 
 

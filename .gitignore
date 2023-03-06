@@ -137,3 +137,5 @@ gptbot_db.sqlite
 
 .space
 app/bot.py
+
+.vscode
