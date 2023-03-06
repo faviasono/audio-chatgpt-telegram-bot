@@ -29,8 +29,8 @@ You can deploy your own bot, or try out mine! [@AudioGPT_bot](https://t.me/Audio
 2. Register to OpenAI and retrieve the key
 3. Register to Railway and use the template I created to set up your own configuration:
 
-    [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/ENSB8w?referralCode=c9RZUJ)
-
+   [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/rxWKuE?referralCode=c9RZUJ)
+   
 If you want to run locally, you will still need to set up a PostgreSQL database and configure the following env variable in `app/.env` file:
 ```YAML
     API_TELEGRAM = ""
