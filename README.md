@@ -25,9 +25,9 @@ You can deploy your own bot, or try out mine! [@AudioGPT_bot](https://t.me/Audio
 
 ## Setup for deployment
 
-1. Register the new bot with @BotFather and retrieve the bot key
-2. Register to OpenAI and retrieve the key
-3. Register to Railway and use the template I created to set up your own configuration:
+1. Register the new bot with [@BotFather](https://core.telegram.org/bots/tutorial) and retrieve the bot key
+2. Register to [OpenAI](https://openai.com)  and retrieve the key
+3. Register to [Railway](https://railway.app) and use the template I created to set up your own configuration:
 
    [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/rxWKuE?referralCode=c9RZUJ)
    
